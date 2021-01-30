@@ -6,7 +6,7 @@ const mustacheExpress = require('mustache-express');
 const cron = require('node-cron');
 const axios = require('axios');
 // var HTMLParser = require('node-html-parser');
-
+const cheerio = require('cheerio');
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
@@ -25,39 +25,42 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
 
-const getDOM = async () => {
-    try {
-            return await axios.get('https://www.gamenerdz.com/deal-of-the-day')
-        } catch (error) {
-            console.error(error)
-        }
-}
-const readDOM = async () => {
-    const DOM = await getDOM()
+const url = 'https://www.gamenerdz.com/deal-of-the-day'
 
-    const parsedDOM = HTMLParser.parse(DOM
-        // , {
-        // blockTextElements: {
-        //     script: true,	// keep text content when parsing
-        //     noscript: true,	// keep text content when parsing
-        //     style: true,		// keep text content when parsing
-        //     pre: true			// keep text content when parsing
-        // }
-        // }
-        );
-    if (parsedDOM) {
-        // console.log(DOM);
-        console.log(parsedDOM);
-    }
-}   
-readDOM();
-
+const scrapeStatus = false;
 
 // CRON JOB CODE
 // Schedule tasks to be run on the server.
-// cron.schedule('* * * * *', function() {
-//     console.log('DING DONG its six oclock PM!');
+// Runs every 5 mins from 11am to 2pm
+const task = cron.schedule('*/5 11-13 * * *', function() {    
+    //Axios Fetch code
+    axios.get(url)
+    .then((response) => {
+        let $ = cheerio.load(response.data);
+        
+        let gameTitle = $('h4.card-title a').text();
+        console.log(gameTitle);
 
-// });
+        let cartText = $('.cart_btn').text();   
+        console.log(cartText);
+
+        let outOfStockBtn = $('.out_stock_btn').text();
+        console.log(outOfStockBtn);
+
+    })
+    .then((cartText, outOfStockBtn) => {
+        if(outOfStockBtn){
+            // Add code here for notifying front end that OOS
+            stopScrape();
+        }
+
+    })
+});
+
+function stopScrape (scrapeStatus) {
+    if(scrapeStatus == true){
+        task.stop();
+    }
+}
 
 module.exports = app;
