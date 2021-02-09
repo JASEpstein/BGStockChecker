@@ -48,19 +48,35 @@ const scrapeCron = cron.schedule('*/5 11-13 * * *', function() {
         console.log(cartText);
 
         let outOfStockBtn = $('.out_stock_btn').text();
-        console.log(outOfStockBtn);
+        
+        if(outOfStockBtn){
+            console.log(outOfStockBtn.length);
+        } 
 
     })
     .then((cartText, outOfStockBtn, gameTitle) => {
-        if(outOfStockBtn || !cartText){
-            //Stops checking the listing
+        if(outOfStockBtn || cartText !== "Add to Cart"){
+            //If product is OOS - stops checking the listing
             scrapeCron.stop();
             //Writes to JSON to update the front end
-            fs.writeFileSync(frontEndVars.stockStatus, "Out of Stock")
-        } else if(cartText){
-            //Add code for sending Product data to front end
-            fs.writeFileSync(frontEndVars.gameName, gameTitle);
+            //Need to update the write function to log the data: game title and time it was marked OOS
+            //OK - Create an object with all relevant DOM data, push that onto the JSON, then run all the logic checking the object.
+            fs.writeFile(frontEndVars.stockStatus, "Out of Stock",(err) => {
+                if(err) throw err;
+                console.log(`${frontEndVars.stockStatus}! -- stockStatus var written to JSON`);
+            })
+        } else if(cartText === "Add to Cart"){
+            //If product is still in stock
+            if(frontEndVars.gameName !== gameTitle){
+                fs.writeFile(frontEndVars.gameName, gameTitle, (err) => {
+                    if(err) throw err;
+                    console.log(`${frontEndVars.gameName} -- gameName var written to JSON`);
+                });
+            }
+            console.log(frontEndVars);
 
+        } else if(!outOfStockBtn && !cartText){
+            console.log("Product not on page");
         }
 
     })
@@ -68,10 +84,11 @@ const scrapeCron = cron.schedule('*/5 11-13 * * *', function() {
 
 
 const restartCron = cron.schedule('* 0 * * *', function(scrapeStatus){
-    
     scrapeStatus = false;
     scrapeCron.start();
 })
+
+restartCron();
 
 // function stopScrape (scrapeStatus) {
 //     if(scrapeStatus == true){
