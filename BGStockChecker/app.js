@@ -9,7 +9,7 @@ const axios = require('axios');
 const cheerio = require('cheerio');
 const fs = require('fs');
 
-const frontEndVars = require('./data/frontEndVariables.json');
+const dataJSON = require('./data/frontEndVariables.json');
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
@@ -60,20 +60,20 @@ const scrapeCron = cron.schedule('*/5 11-13 * * *', function() {
             scrapeCron.stop();
             //Writes to JSON to update the front end
             //Need to update the write function to log the data: game title and time it was marked OOS
-            //OK - Create an object with all relevant DOM data, push that onto the JSON, then run all the logic checking the object.
-            fs.writeFile(frontEndVars.stockStatus, "Out of Stock",(err) => {
+            //OK - Create an object with all relevant DOM data, push that onto the JSON, then run all the logic checking the
+            fs.writeFile(dataJSON.stockStatus, "Out of Stock",(err) => {
                 if(err) throw err;
-                console.log(`${frontEndVars.stockStatus}! -- stockStatus var written to JSON`);
+                console.log(`${dataJSON.stockStatus}! -- stockStatus var written to JSON`);
             })
         } else if(cartText === "Add to Cart"){
             //If product is still in stock
-            if(frontEndVars.gameName !== gameTitle){
-                fs.writeFile(frontEndVars.gameName, gameTitle, (err) => {
+            if(dataJSON.gameName !== gameTitle){
+                fs.writeFile(dataJSON.gameName, gameTitle, (err) => {
                     if(err) throw err;
-                    console.log(`${frontEndVars.gameName} -- gameName var written to JSON`);
+                    console.log(`${dataJSON.gameName} -- gameName var written to JSON`);
                 });
             }
-            console.log(frontEndVars);
+            console.log(dataJSON);
 
         } else if(!outOfStockBtn && !cartText){
             console.log("Product not on page");
